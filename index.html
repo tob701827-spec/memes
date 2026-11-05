@@ -3,21 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme-O-Matic 3000 | Expresiones Faciales con IA</title>
+    <title>Meme-O-Matic 3000 | Catálogo de Memes con IA</title>
     <link rel="stylesheet" href="css.css">
 </head>
 <body>
 
+    <!-- Encabezado Principal en Blanco y Oro -->
     <header class="header-box">
         <h1>👑 MEME-O-MATIC 3000 👑</h1>
-        <p class="subtitle">¡Controla memes legendarios en vivo con tu rostro!</p>
-        <button id="btn-sound" class="sound-toggle-btn">
-            🔊 Efectos de Sonido: <span id="sound-status">ON</span>
-        </button>
+        <p class="subtitle">¡Controla memes legendarios en vivo con tu rostro y sube los tuyos!</p>
+        
+        <div class="header-actions">
+            <button id="btn-sound" class="btn-white-gold">
+                🔊 Sonidos: <span id="sound-status">ON</span>
+            </button>
+            <button id="btn-open-upload" class="btn-gold">
+                ➕ Subir Mi Propio Meme
+            </button>
+            <button id="btn-reset-catalog" class="btn-white-gold" title="Restablecer a los memes originales">
+                🔄 Resetear Catálogo
+            </button>
+        </div>
     </header>
 
+    <!-- Escenario Principal -->
     <main class="stage-container">
-        <!-- Columna de la Cámara Web con Detección IA -->
+        <!-- Columna de la Cámara con Detección IA -->
         <section class="camera-card">
             <div class="card-badge">
                 <span>🟢</span> <span id="status-label">CONECTANDO IA...</span>
@@ -28,20 +39,20 @@
             </div>
         </section>
 
-        <!-- Columna del Meme Dinámico -->
+        <!-- Columna del Meme Activo -->
         <section class="meme-card">
             <div class="card-badge">
-                <span>⭐</span> MEME DETECTADO
+                <span>⭐</span> MEME EN VIVO
             </div>
 
             <div class="meme-img-container">
-                <img id="meme" src="https://i.imgflip.com/gk5el.jpg" alt="Meme Dinámico">
+                <img id="meme" src="img/perro_serio_juzgando.jpg" alt="Meme Activo">
             </div>
 
-            <h2 id="meme-title">Harold Hide The Pain</h2>
+            <h2 id="meme-title">Mirada de Juicio</h2>
 
             <div class="speech-bubble">
-                <p id="meme-phrase">"Sonriendo por fuera... pero qué calor hace acá."</p>
+                <p id="meme-phrase">"Te estoy juzgando en silencio... sé exactamente lo que hiciste."</p>
             </div>
 
             <div class="meter-container">
@@ -57,44 +68,98 @@
     </main>
 
     <!-- Guía Interactiva de Gestos -->
-    <footer class="guide-section">
-        <h3 class="guide-title">🎯 Guía de Gestos para Desbloquear Memes</h3>
+    <section class="guide-section">
+        <h3 class="section-heading">🎯 Gestos Faciales Disponibles</h3>
         <div class="guide-grid">
-            <div id="guide-neutral" class="guide-card active-card">
+            <div id="guide-serio" class="guide-card active-card">
                 <div class="guide-emoji">😐</div>
                 <div class="guide-info">
                     <h4>Cara Seria / Neutra</h4>
-                    <p>Harold Ocultando el Dolor</p>
+                    <p id="guide-serio-title">Mirada de Juicio</p>
                 </div>
             </div>
 
-            <div id="guide-mouth" class="guide-card">
+            <div id="guide-boca" class="guide-card">
                 <div class="guide-emoji">😮</div>
                 <div class="guide-info">
-                    <h4>Abre la Boca Grande</h4>
-                    <p>Pikachu en Shock Total</p>
+                    <h4>Boca Abierta / Grito</h4>
+                    <p id="guide-boca-title">¡¡¡SHOCK TOTAL!!!</p>
                 </div>
             </div>
 
-            <div id="guide-smile" class="guide-card">
+            <div id="guide-sonrisa" class="guide-card">
                 <div class="guide-emoji">😄</div>
                 <div class="guide-info">
-                    <h4>Muestra una Gran Sonrisa</h4>
-                    <p>Leonardo DiCaprio Brindando</p>
+                    <h4>Gran Sonrisa</h4>
+                    <p id="guide-sonrisa-title">Perritos Felices</p>
                 </div>
             </div>
 
-            <div id="guide-wink" class="guide-card">
-                <div class="guide-emoji">🤨</div>
+            <div id="guide-guino" class="guide-card">
+                <div class="guide-emoji">😉</div>
                 <div class="guide-info">
-                    <h4>Guiña un Ojo</h4>
-                    <p>The Rock Sospechoso</p>
+                    <h4>Guiño de Ojo</h4>
+                    <p id="guide-guino-title">Shaq: Tiempo Fuera</p>
                 </div>
             </div>
         </div>
-    </footer>
+    </section>
 
-    <!-- Lógica JavaScript Principal -->
+    <!-- Catálogo Completo de Memes -->
+    <section class="catalog-section">
+        <h3 class="section-heading">📦 Catálogo de Memes Activos (<span id="catalog-count">0</span>)</h3>
+        <div id="catalog-grid" class="catalog-grid">
+            <!-- Se genera dinámicamente desde JavaScript -->
+        </div>
+    </section>
+
+    <!-- Modal para Subir Memes Propios -->
+    <div id="modal-upload" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>➕ SUBIR NUEVO MEME</h3>
+                <button id="btn-close-modal" class="btn-close-modal">&times;</button>
+            </div>
+
+            <form id="form-upload-meme">
+                <div class="form-group">
+                    <label for="input-meme-title">Título del Meme:</label>
+                    <input type="text" id="input-meme-title" placeholder="Ej. Mi gato sospechando" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-meme-phrase">Comentario / Frase Graciosa:</label>
+                    <textarea id="input-meme-phrase" rows="2" placeholder="Ej. ¡No me hables hasta que termine mi siesta!" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="select-meme-emotion">Emoción Facial que lo Activa:</label>
+                    <select id="select-meme-emotion" required>
+                        <option value="boca">😮 Boca Abierta / Grito de Shock</option>
+                        <option value="sonrisa">😄 Sonrisa / Alegría</option>
+                        <option value="serio">😐 Cara Seria / Neutral</option>
+                        <option value="guino">😉 Guiño de Ojo / Sospecha</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagen del Meme:</label>
+                    <label class="file-dropzone" for="input-meme-file">
+                        <span>📁 Haz clic para elegir imagen de tu computadora</span>
+                        <input type="file" id="input-meme-file" accept="image/*" style="display: none;">
+                        <img id="preview-upload" src="" alt="Vista Previa" style="display: none;">
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="btn-cancel-modal" class="btn-white-gold">Cancelar</button>
+                    <button type="submit" class="btn-gold">🚀 Publicar Meme</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Principal con MediaPipe y Gestión de Memes -->
     <script type="module" src="app.js"></script>
 </body>
 </html>

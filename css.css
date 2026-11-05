@@ -1,5 +1,6 @@
 /* ====================================================
    Meme-O-Matic 3000 - Estilo Blanco con Dorado y Cómico
+   Con Catálogo Dinámico y Subida de Memes
    ==================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600;700;800&display=swap');
@@ -34,7 +35,7 @@ body {
     color: var(--text-dark);
     font-family: 'Fredoka', cursive, system-ui, sans-serif;
     min-height: 100vh;
-    padding: 25px 20px 40px;
+    padding: 25px 20px 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -68,32 +69,61 @@ h1 {
     gap: 8px;
 }
 
-/* Botón de Sonido Flotante */
-.sound-toggle-btn {
+/* Barra de Botones de Acción */
+.header-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+    filter: brightness(1.05);
+}
+
+.btn-gold:active {
+    transform: scale(0.97);
+}
+
+.btn-white-gold {
     background: var(--white);
     color: var(--gold-dark);
     border: 2.5px solid var(--gold-primary);
     border-radius: 50px;
-    padding: 6px 16px;
-    font-size: 0.82rem;
+    padding: 8px 18px;
+    font-size: 0.85rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
     transition: all 0.2s ease;
-    margin-top: 10px;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
-.sound-toggle-btn:hover {
+.btn-white-gold:hover {
     background: var(--gold-bg-light);
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
-}
-
-.sound-toggle-btn:active {
-    transform: scale(0.97);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.3);
 }
 
 /* Layout Principal de 2 Columnas */
@@ -155,7 +185,7 @@ video, canvas {
     object-fit: cover;
 }
 
-/* Columna de Meme */
+/* Columna del Meme Activo */
 .meme-card {
     background: var(--white);
     border: 3.5px solid var(--gold-primary);
@@ -170,11 +200,11 @@ video, canvas {
     text-align: center;
 }
 
-/* Contenedor de la Imagen del Meme con Borde Dorado Luminoso */
+/* Marco de la Imagen del Meme con Borde Dorado */
 .meme-img-container {
     position: relative;
-    width: 250px;
-    height: 250px;
+    width: 260px;
+    height: 260px;
     border-radius: 18px;
     padding: 6px;
     background: linear-gradient(135deg, #fef08a 0%, #fbbf24 50%, #b45309 100%);
@@ -183,6 +213,7 @@ video, canvas {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
 }
 
 #meme {
@@ -195,7 +226,7 @@ video, canvas {
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Animación de brinco cómico al cambiar meme */
+/* Animación cómica al cambiar de meme */
 .meme-bounce {
     animation: memePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -206,7 +237,7 @@ video, canvas {
     100% { transform: scale(1) rotate(0deg); }
 }
 
-/* Información y Frase del Meme */
+/* Título del Meme */
 #meme-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.85rem;
@@ -282,180 +313,32 @@ video, canvas {
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
 }
 
-/* Guía de Expresiones Cómicas abajo */
+/* ====================================================
+   GUÍA DE GESTOS
+   ==================================================== */
 .guide-section {
     margin-top: 35px;
-    max-width: 1100px;
+    max-width: 1200px;
     width: 100%;
 }
 
-.guide-title {
+.section-heading {
     text-align: center;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: var(--gold-dark);
     margin-bottom: 16px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-.guide-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 15px;
-}
-
-.guide-card {
-    background: var(--white);
-    border: 2.5px solid #fef08a;
-    border-radius: 14px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
-    transition: all 0.2s ease;
-}
-
-.guide-card:hover, .guide-card.active-card {
-    border-color: var(--gold-primary);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
-    background: #fffdf5;
-}
-
-.guide-emoji {
-    font-size: 2rem;
-}
-
-.guide-info h4 {
-    font-size: 0.88rem;
-    font-weight: 800;
-    color: var(--text-dark);
-}
-
-.guide-info p {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    font-weight: 600;
-}
-
-/* Responsividad */
-@media (max-width: 720px) {
-    h1 {
-        font-size: 1.15rem;
-    }
-    .video-wrapper {
-        width: 100%;
-    }
-    .meme-card {
-        width: 100%;
-    }
-}
-
-
-@keyframes memePop {
-    0% { transform: scale(0.85) rotate(-3deg); }
-    50% { transform: scale(1.1) rotate(3deg); }
-    100% { transform: scale(1) rotate(0deg); }
-}
-
-/* Información y Frase del Meme */
-#meme-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 0.85rem;
-    color: var(--gold-dark);
-    margin-bottom: 12px;
-    line-height: 1.4;
-    text-transform: uppercase;
-    text-shadow: 1px 1px 0px #fff;
-}
-
-/* Burbuja de Diálogo Cómica */
-.speech-bubble {
-    position: relative;
-    background: #fffdf5;
-    border: 2.5px solid var(--gold-primary);
-    border-radius: 16px;
-    padding: 12px 18px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #451a03;
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
-    width: 100%;
-    margin-bottom: 18px;
-    min-height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.speech-bubble::before {
-    content: '';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 10px 12px 10px;
-    border-style: solid;
-    border-color: transparent transparent var(--gold-primary) transparent;
-}
-
-/* Medidor Cómico: Meme-O-Meter */
-.meter-container {
-    width: 100%;
-    margin-top: 5px;
-}
-
-.meter-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: var(--gold-dark);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-}
-
-.meter-track {
-    width: 100%;
-    height: 12px;
-    background-color: #fef3c7;
-    border: 2px solid var(--gold-primary);
-    border-radius: 20px;
-    overflow: hidden;
-    padding: 1px;
-}
-
-.meter-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #d946ef 100%);
-    border-radius: 20px;
-    transition: width 0.15s ease-out;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
-}
-
-/* Guía de Expresiones Cómicas abajo */
-.guide-section {
-    margin-top: 35px;
-    max-width: 1100px;
-    width: 100%;
-}
-
-.guide-title {
-    text-align: center;
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--gold-dark);
-    margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    gap: 8px;
 }
 
 .guide-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 15px;
 }
 
@@ -463,7 +346,7 @@ video, canvas {
     background: var(--white);
     border: 2.5px solid #fef08a;
     border-radius: 14px;
-    padding: 12px 14px;
+    padding: 14px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -479,19 +362,262 @@ video, canvas {
 }
 
 .guide-emoji {
-    font-size: 2rem;
+    font-size: 2.2rem;
 }
 
 .guide-info h4 {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 800;
     color: var(--text-dark);
 }
 
 .guide-info p {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--text-muted);
     font-weight: 600;
+}
+
+/* ====================================================
+   CATÁLOGO DINÁMICO DE MEMES (CON TUS FOTOS)
+   ==================================================== */
+.catalog-section {
+    margin-top: 40px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.catalog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 18px;
+}
+
+.catalog-card {
+    background: var(--white);
+    border: 2.5px solid var(--gold-bright);
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.12);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    transition: all 0.25s ease;
+}
+
+.catalog-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--gold-primary);
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+}
+
+.catalog-thumb-box {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #fef3c7;
+    margin-bottom: 10px;
+    background-color: #f8fafc;
+}
+
+.catalog-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.catalog-card:hover .catalog-thumb {
+    transform: scale(1.05);
+}
+
+.catalog-emotion-tag {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 50px;
+    background: #fef3c7;
+    color: var(--gold-dark);
+    border: 1px solid var(--gold-bright);
+    margin-bottom: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.catalog-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.catalog-phrase {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.catalog-delete-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(239, 68, 68, 0.9);
+    color: #ffffff;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.catalog-delete-btn:hover {
+    transform: scale(1.15);
+    background: #dc2626;
+}
+
+/* ====================================================
+   MODAL DE SUBIDA DE MEMES
+   ==================================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--white);
+    border: 4px solid var(--gold-primary);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), 0 0 25px rgba(245, 158, 11, 0.35);
+    width: 480px;
+    max-width: 100%;
+    padding: 26px;
+    transform: scale(0.9);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    border-bottom: 2px dashed #fef3c7;
+    padding-bottom: 10px;
+}
+
+.modal-header h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.95rem;
+    color: var(--gold-dark);
+}
+
+.btn-close-modal {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gold-dark);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px;
+    border: 2px solid #fde68a;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+/* Área de Subida de Archivo con Previsualización */
+.file-dropzone {
+    border: 2px dashed var(--gold-primary);
+    background: #fffdf5;
+    border-radius: 12px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-dropzone:hover {
+    background: #fef3c7;
+}
+
+#preview-upload {
+    max-height: 110px;
+    border-radius: 8px;
+    border: 2px solid var(--gold-bright);
+    object-fit: cover;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
 }
 
 /* Responsividad */
