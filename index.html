@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meme-O-Matic 3000 | Catálogo de Memes con IA</title>
+    <title>Meme-O-Matic 3000 | Catálogo de Memes con IA y Supabase</title>
     <link rel="stylesheet" href="css.css">
 </head>
 <body>
@@ -14,14 +14,29 @@
         <p class="subtitle">¡Controla memes legendarios en vivo con tu rostro y sube los tuyos!</p>
         
         <div class="header-actions">
-            <button id="btn-sound" class="btn-white-gold">
-                🔊 Sonidos: <span id="sound-status">ON</span>
+            <!-- Botón para Prender y Apagar Cámara -->
+            <button id="btn-camera-toggle" class="btn-camera-off" title="Encender o apagar la cámara web">
+                🛑 Apagar Cámara
             </button>
+
+            <!-- Botón para Subir Memes Propios -->
             <button id="btn-open-upload" class="btn-gold">
                 ➕ Subir Mi Propio Meme
             </button>
+
+            <!-- Botón / Estado de Conexión a Supabase -->
+            <button id="btn-supabase-modal" class="supabase-pill offline" title="Configurar conexión con Supabase">
+                ⚡ Supabase: <span id="supabase-status-text">Modo Local</span>
+            </button>
+
+            <!-- Botón de Sonidos Cómicos -->
+            <button id="btn-sound" class="btn-white-gold" title="Activar o silenciar sonidos cómicos">
+                🔊 Sonidos: <span id="sound-status">ON</span>
+            </button>
+
+            <!-- Botón para Resetear Catálogo -->
             <button id="btn-reset-catalog" class="btn-white-gold" title="Restablecer a los memes originales">
-                🔄 Resetear Catálogo
+                🔄 Resetear
             </button>
         </div>
     </header>
@@ -31,11 +46,21 @@
         <!-- Columna de la Cámara con Detección IA -->
         <section class="camera-card">
             <div class="card-badge">
-                <span>🟢</span> <span id="status-label">CONECTANDO IA...</span>
+                <span id="status-dot">🟢</span> <span id="status-label">CONECTANDO IA...</span>
             </div>
             <div class="video-wrapper">
                 <video id="webcam" autoplay playsinline width="640" height="480"></video>
                 <canvas id="output_canvas" width="640" height="480"></canvas>
+
+                <!-- Pantalla cuando la cámara está apagada -->
+                <div id="camera-off-overlay" class="camera-off-overlay" style="display: none;">
+                    <div class="camera-off-icon">📷</div>
+                    <h3 class="camera-off-title">CÁMARA APAGADA</h3>
+                    <p class="camera-off-desc">La cámara está en reposo. Pulsa el botón para reactivar la detección facial.</p>
+                    <button id="btn-turn-on-overlay" class="btn-camera-on">
+                        ▶️ Encender Cámara
+                    </button>
+                </div>
             </div>
         </section>
 
@@ -107,13 +132,13 @@
 
     <!-- Catálogo Completo de Memes -->
     <section class="catalog-section">
-        <h3 class="section-heading">📦 Catálogo de Memes Activos (<span id="catalog-count">0</span>)</h3>
+        <h3 class="section-heading">📦 Catálogo de Memes (<span id="catalog-count">0</span>)</h3>
         <div id="catalog-grid" class="catalog-grid">
             <!-- Se genera dinámicamente desde JavaScript -->
         </div>
     </section>
 
-    <!-- Modal para Subir Memes Propios -->
+    <!-- Modal 1: Subir Memes Propios -->
     <div id="modal-upload" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -159,7 +184,39 @@
         </div>
     </div>
 
-    <!-- Script Principal con MediaPipe y Gestión de Memes -->
+    <!-- Modal 2: Configuración de Supabase -->
+    <div id="modal-supabase" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚡ CONECTAR SUPABASE</h3>
+                <button id="btn-close-supabase" class="btn-close-modal">&times;</button>
+            </div>
+
+            <div class="supabase-help-box">
+                <strong>¿Dónde encuentro estos datos?</strong><br>
+                En tu proyecto de Supabase ve a <em>Project Settings &gt; API</em> y copia la <strong>Project URL</strong> y la <strong>anon/public Key</strong>. También ejecuta el archivo <code>database.sql</code> en el SQL Editor de Supabase.
+            </div>
+
+            <form id="form-supabase-config">
+                <div class="form-group">
+                    <label for="input-supabase-url">Project URL de Supabase:</label>
+                    <input type="text" id="input-supabase-url" placeholder="https://tu-proyecto.supabase.co" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="input-supabase-key">anon / public Key de Supabase:</label>
+                    <input type="password" id="input-supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" id="btn-disconnect-supabase" class="btn-white-gold">Desconectar</button>
+                    <button type="submit" class="btn-gold">💾 Conectar y Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Principal con MediaPipe y Supabase -->
     <script type="module" src="app.js"></script>
 </body>
 </html>

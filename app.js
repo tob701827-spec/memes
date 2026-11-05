@@ -4,7 +4,12 @@ import {
   DrawingUtils
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest";
 
-// Elementos del DOM
+// Cliente oficial de Supabase mediante ESM
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// ====================================================
+// ELEMENTOS DEL DOM
+// ====================================================
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
 const canvasCtx = canvasElement.getContext("2d");
@@ -14,12 +19,18 @@ const memePhrase = document.getElementById("meme-phrase");
 const meterFill = document.getElementById("meter-fill");
 const meterVal = document.getElementById("meter-val");
 const statusLabel = document.getElementById("status-label");
+const statusDot = document.getElementById("status-dot");
 const btnSound = document.getElementById("btn-sound");
 const soundStatus = document.getElementById("sound-status");
 const catalogGrid = document.getElementById("catalog-grid");
 const catalogCount = document.getElementById("catalog-count");
 
-// Elementos del Modal de Subida
+// Control de Cámara
+const btnCameraToggle = document.getElementById("btn-camera-toggle");
+const cameraOffOverlay = document.getElementById("camera-off-overlay");
+const btnTurnOnOverlay = document.getElementById("btn-turn-on-overlay");
+
+// Modal de Subida de Memes
 const btnOpenUpload = document.getElementById("btn-open-upload");
 const btnCloseModal = document.getElementById("btn-close-modal");
 const btnCancelModal = document.getElementById("btn-cancel-modal");
@@ -29,9 +40,19 @@ const inputMemeFile = document.getElementById("input-meme-file");
 const previewUpload = document.getElementById("preview-upload");
 const btnResetCatalog = document.getElementById("btn-reset-catalog");
 
-// ----------------------------------------------------
-// Colección Inicial con tus 5 Imágenes Subidas
-// ----------------------------------------------------
+// Modal de Configuración Supabase
+const btnSupabaseModal = document.getElementById("btn-supabase-modal");
+const supabaseStatusText = document.getElementById("supabase-status-text");
+const modalSupabase = document.getElementById("modal-supabase");
+const btnCloseSupabase = document.getElementById("btn-close-supabase");
+const formSupabaseConfig = document.getElementById("form-supabase-config");
+const inputSupabaseUrl = document.getElementById("input-supabase-url");
+const inputSupabaseKey = document.getElementById("input-supabase-key");
+const btnDisconnectSupabase = document.getElementById("btn-disconnect-supabase");
+
+// ====================================================
+// MEMES PREDETERMINADOS (TUS 5 FOTOS)
+// ====================================================
 const DEFAULT_MEMES = [
   {
     id: "def_1",
@@ -80,15 +101,21 @@ const DEFAULT_MEMES = [
   }
 ];
 
-// Cargar catálogo desde localStorage o usar el predeterminado
-let memesCatalog = loadCatalog();
+// Estado de la Aplicación
+let memesCatalog = loadLocalCatalog();
 let currentEmotion = "serio";
 let soundEnabled = true;
 let faceLandmarker = null;
 let lastVideoTime = -1;
 let lastMemeId = null;
+let animationFrameId = null;
+let mediaStream = null;
+let isCameraActive = true;
 
-// Diccionario de emojis y nombres por emoción
+// Cliente de Supabase
+let supabase = null;
+let isSupabaseConnected = false;
+
 const EMOTION_MAP = {
   boca: { label: "Boca Abierta", emoji: "😮", guideId: "guide-boca" },
   sonrisa: { label: "Sonrisa", emoji: "😄", guideId: "guide-sonrisa" },
@@ -96,27 +123,152 @@ const EMOTION_MAP = {
   guino: { label: "Guiño", emoji: "😉", guideId: "guide-guino" }
 };
 
-// ----------------------------------------------------
-// Gestión de Catálogo y LocalStorage
-// ----------------------------------------------------
-function loadCatalog() {
+// ====================================================
+// CONEXIÓN A SUPABASE (POSTGRESQL & REALTIME)
+// ====================================================
+async function setupSupabaseConnection() {
+  const savedUrl = localStorage.getItem("supabase_url") || "";
+  const savedKey = localStorage.getItem("supabase_key") || "";
+
+  inputSupabaseUrl.value = savedUrl;
+  inputSupabaseKey.value = savedKey;
+
+  if (!savedUrl || !savedKey) {
+    setSupabaseOfflineUI("Modo Local");
+    return;
+  }
+
+  try {
+    supabase = createClient(savedUrl, savedKey);
+
+    // Probar conexión con una consulta simple
+    const { data, error } = await supabase.from("memes").select("id, titulo, frase, emocion, imagen_url").limit(50);
+
+    if (error) {
+      console.warn("Fallo al conectar con Supabase:", error);
+      setSupabaseOfflineUI("Error Conexión");
+      return;
+    }
+
+    isSupabaseConnected = true;
+    setSupabaseOnlineUI();
+
+    // Si hay datos en Supabase, sincronizar el catálogo
+    if (data && data.length > 0) {
+      memesCatalog = data.map(item => ({
+        id: item.id,
+        title: item.titulo,
+        phrase: item.frase,
+        emotion: item.emocion,
+        img: item.imagen_url,
+        isCustom: true,
+        soundFreq: 450
+      }));
+      renderCatalog();
+    }
+
+    // Escuchar cambios en Tiempo Real (Realtime) para que se actualice solo
+    supabase.channel("public:memes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "memes" }, async () => {
+        console.log("⚡ Cambio detectado en Supabase en tiempo real. Actualizando catálogo...");
+        await fetchMemesFromSupabase();
+      })
+      .subscribe();
+
+  } catch (err) {
+    console.warn("Error al inicializar Supabase:", err);
+    setSupabaseOfflineUI("Modo Local");
+  }
+}
+
+async function fetchMemesFromSupabase() {
+  if (!supabase || !isSupabaseConnected) return;
+  try {
+    const { data } = await supabase.from("memes").select("*").order("created_at", { ascending: false });
+    if (data && data.length > 0) {
+      memesCatalog = data.map(item => ({
+        id: item.id,
+        title: item.titulo,
+        phrase: item.frase,
+        emotion: item.emocion,
+        img: item.imagen_url,
+        isCustom: true,
+        soundFreq: 450
+      }));
+      renderCatalog();
+    }
+  } catch (e) {
+    console.warn("Error al recargar desde Supabase:", e);
+  }
+}
+
+function setSupabaseOnlineUI() {
+  btnSupabaseModal.classList.remove("offline");
+  supabaseStatusText.textContent = "🟢 En Vivo";
+}
+
+function setSupabaseOfflineUI(text) {
+  isSupabaseConnected = false;
+  btnSupabaseModal.classList.add("offline");
+  supabaseStatusText.textContent = text || "Modo Local";
+}
+
+// Modal Supabase
+btnSupabaseModal.addEventListener("click", () => {
+  modalSupabase.classList.add("active");
+});
+btnCloseSupabase.addEventListener("click", () => {
+  modalSupabase.classList.remove("active");
+});
+modalSupabase.addEventListener("click", (e) => {
+  if (e.target === modalSupabase) modalSupabase.classList.remove("active");
+});
+
+formSupabaseConfig.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const url = inputSupabaseUrl.value.trim();
+  const key = inputSupabaseKey.value.trim();
+
+  localStorage.setItem("supabase_url", url);
+  localStorage.setItem("supabase_key", key);
+
+  modalSupabase.classList.remove("active");
+  alert("Guardando credenciales... Conectando a Supabase.");
+  await setupSupabaseConnection();
+});
+
+btnDisconnectSupabase.addEventListener("click", () => {
+  if (confirm("¿Desconectar Supabase y volver al almacenamiento local?")) {
+    localStorage.removeItem("supabase_url");
+    localStorage.removeItem("supabase_key");
+    supabase = null;
+    isSupabaseConnected = false;
+    inputSupabaseUrl.value = "";
+    inputSupabaseKey.value = "";
+    setSupabaseOfflineUI("Modo Local");
+    memesCatalog = loadLocalCatalog();
+    renderCatalog();
+    modalSupabase.classList.remove("active");
+  }
+});
+
+// ====================================================
+// GESTIÓN DEL CATÁLOGO Y LOCALSTORAGE
+// ====================================================
+function loadLocalCatalog() {
   try {
     const saved = localStorage.getItem("meme_o_matic_catalog");
     if (saved) {
       return JSON.parse(saved);
     }
-  } catch (e) {
-    console.warn("No se pudo cargar localStorage:", e);
-  }
+  } catch (e) {}
   return [...DEFAULT_MEMES];
 }
 
 function saveCatalog() {
   try {
     localStorage.setItem("meme_o_matic_catalog", JSON.stringify(memesCatalog));
-  } catch (e) {
-    console.warn("No se pudo guardar en localStorage:", e);
-  }
+  } catch (e) {}
   renderCatalog();
 }
 
@@ -141,18 +293,24 @@ function renderCatalog() {
       <p class="catalog-phrase">${meme.phrase}</p>
     `;
 
-    // Hacer clic para previsualizar inmediatamente en vivo
     card.addEventListener("click", (e) => {
       if (e.target.classList.contains("catalog-delete-btn")) return;
       displayMeme(meme);
     });
 
-    // Botón de eliminar para memes personalizados
     if (meme.isCustom) {
       const delBtn = card.querySelector(".catalog-delete-btn");
-      delBtn.addEventListener("click", (e) => {
+      delBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (confirm(`¿Eliminar el meme "${meme.title}" del catálogo?`)) {
+        if (confirm(`¿Eliminar el meme "${meme.title}"?`)) {
+          // Si está conectado a Supabase, borrar también de la base de datos
+          if (isSupabaseConnected && supabase && typeof meme.id === "number") {
+            try {
+              await supabase.from("memes").delete().eq("id", meme.id);
+            } catch (err) {
+              console.warn("Error al borrar en Supabase:", err);
+            }
+          }
           memesCatalog = memesCatalog.filter(m => m.id !== meme.id);
           saveCatalog();
         }
@@ -163,9 +321,9 @@ function renderCatalog() {
   });
 }
 
-// ----------------------------------------------------
-// Modal y Subida de Memes Propios
-// ----------------------------------------------------
+// ====================================================
+// SUBIDA DE NUEVO MEME
+// ====================================================
 let uploadedImageBase64 = null;
 
 btnOpenUpload.addEventListener("click", () => {
@@ -175,16 +333,15 @@ btnOpenUpload.addEventListener("click", () => {
   previewUpload.style.display = "none";
 });
 
-function closeModal() {
+function closeUploadModal() {
   modalUpload.classList.remove("active");
 }
-btnCloseModal.addEventListener("click", closeModal);
-btnCancelModal.addEventListener("click", closeModal);
+btnCloseModal.addEventListener("click", closeUploadModal);
+btnCancelModal.addEventListener("click", closeUploadModal);
 modalUpload.addEventListener("click", (e) => {
-  if (e.target === modalUpload) closeModal();
+  if (e.target === modalUpload) closeUploadModal();
 });
 
-// Previsualización de imagen al subirla
 inputMemeFile.addEventListener("change", (e) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -198,8 +355,7 @@ inputMemeFile.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// Formulario de publicación de nuevo meme
-formUploadMeme.addEventListener("submit", (e) => {
+formUploadMeme.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const title = document.getElementById("input-meme-title").value.trim();
@@ -211,38 +367,120 @@ formUploadMeme.addEventListener("submit", (e) => {
     return;
   }
 
+  const formattedPhrase = phrase ? (phrase.startsWith('"') ? phrase : `"${phrase}"`) : '"¡Meme sin palabras!"';
+
+  // Si Supabase está conectado, insertar en la base de datos remota
+  if (isSupabaseConnected && supabase) {
+    try {
+      const { data, error } = await supabase.from("memes").insert([
+        {
+          titulo: title || "Meme Comunitario",
+          frase: formattedPhrase,
+          emocion: emotion,
+          imagen_url: uploadedImageBase64,
+          autor: "Comunidad"
+        }
+      ]).select();
+
+      if (!error && data && data.length > 0) {
+        console.log("Meme subido exitosamente a Supabase.");
+      }
+    } catch (err) {
+      console.warn("Aviso al subir a Supabase:", err);
+    }
+  }
+
   const newMeme = {
     id: "user_" + Date.now(),
     title: title || "Meme Comunitario",
-    phrase: phrase ? `"${phrase}"` : '"¡Meme sin palabras!"',
+    phrase: formattedPhrase,
     emotion: emotion,
     img: uploadedImageBase64,
     isCustom: true,
     soundFreq: 480
   };
 
-  // Añadir al catálogo y persistir
   memesCatalog.unshift(newMeme);
   saveCatalog();
-  closeModal();
-
-  // Mostrar el nuevo meme inmediatamente con animación
+  closeUploadModal();
   displayMeme(newMeme);
-  alert(`¡Tu meme "${newMeme.title}" se agregó con éxito! Haz el gesto ${EMOTION_MAP[emotion].emoji} frente a la cámara para activarlo.`);
+
+  alert(`¡Tu meme "${newMeme.title}" se publicó con éxito! Haz el gesto ${EMOTION_MAP[emotion].emoji} para activarlo.`);
 });
 
-// Botón de reseteo a los 5 memes originales
+// Resetear catálogo
 btnResetCatalog.addEventListener("click", () => {
-  if (confirm("¿Deseas restablecer el catálogo a los 5 memes originales?")) {
+  if (confirm("¿Restablecer el catálogo a los 5 memes originales?")) {
     memesCatalog = [...DEFAULT_MEMES];
     saveCatalog();
-    displayMeme(DEFAULT_MEMES[3]); // Volver a mostrar el perro serio
+    displayMeme(DEFAULT_MEMES[3]);
   }
 });
 
-// ----------------------------------------------------
-// Sonidos Cómicos Retro (Web Audio API)
-// ----------------------------------------------------
+// ====================================================
+// CONTROL DE ENCENDER Y APAGAR CÁMARA
+// ====================================================
+async function toggleCamera() {
+  if (isCameraActive) {
+    turnOffCamera();
+  } else {
+    await turnOnCamera();
+  }
+}
+
+function turnOffCamera() {
+  isCameraActive = false;
+
+  // Detener las pistas de video para apagar la luz de la cámara
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+
+  // Limpiar canvas y mostrar pantalla de reposo
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  cameraOffOverlay.style.display = "flex";
+
+  // Actualizar botones y badges
+  btnCameraToggle.innerHTML = "▶️ Encender Cámara";
+  btnCameraToggle.className = "btn-camera-on";
+  statusLabel.textContent = "CÁMARA APAGADA";
+  statusDot.textContent = "⚪";
+
+  meterFill.style.width = "0%";
+  meterVal.textContent = "0%";
+}
+
+async function turnOnCamera() {
+  statusLabel.textContent = "CONECTANDO CÁMARA...";
+  statusDot.textContent = "🟡";
+
+  try {
+    await startCamera();
+    isCameraActive = true;
+    cameraOffOverlay.style.display = "none";
+
+    btnCameraToggle.innerHTML = "🛑 Apagar Cámara";
+    btnCameraToggle.className = "btn-camera-off";
+    statusLabel.textContent = "JUGADOR 1 CONECTADO";
+    statusDot.textContent = "🟢";
+  } catch (err) {
+    console.error("Error al reactivar cámara:", err);
+    turnOffCamera();
+  }
+}
+
+btnCameraToggle.addEventListener("click", toggleCamera);
+btnTurnOnOverlay.addEventListener("click", turnOnCamera);
+
+// ====================================================
+// EFECTOS DE SONIDO CÓMICOS
+// ====================================================
 let audioCtx = null;
 function playComicTone(freq, type = "triangle", duration = 0.15) {
   if (!soundEnabled) return;
@@ -269,9 +507,7 @@ function playComicTone(freq, type = "triangle", duration = 0.15) {
 
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
-  } catch (e) {
-    console.warn("Audio Context:", e);
-  }
+  } catch (e) {}
 }
 
 btnSound.addEventListener("click", () => {
@@ -280,9 +516,9 @@ btnSound.addEventListener("click", () => {
   btnSound.style.opacity = soundEnabled ? "1" : "0.6";
 });
 
-// ----------------------------------------------------
-// 1. Inicializar MediaPipe FaceLandmarker
-// ----------------------------------------------------
+// ====================================================
+// MEDIAPIPE FACE LANDMARKER
+// ====================================================
 async function initMediaPipe() {
   statusLabel.textContent = "DESCARGANDO MODELO IA...";
 
@@ -309,50 +545,42 @@ async function initMediaPipe() {
   }
 }
 
-// ----------------------------------------------------
-// 2. Iniciar la Cámara Web
-// ----------------------------------------------------
 async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 480 }
-    });
-    video.srcObject = stream;
-    await video.play();
+  mediaStream = await navigator.mediaDevices.getUserMedia({
+    video: { width: 640, height: 480 }
+  });
+  video.srcObject = mediaStream;
+  await video.play();
 
-    statusLabel.textContent = "JUGADOR 1 CONECTADO";
-    renderLoop();
-  } catch (error) {
-    console.error("Error al acceder a la cámara:", error);
-    statusLabel.textContent = "ERROR: SIN CÁMARA";
-    alert("No se pudo encender la cámara. Revisa los permisos del navegador.");
-  }
+  statusLabel.textContent = "JUGADOR 1 CONECTADO";
+  statusDot.textContent = "🟢";
+
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  renderLoop();
 }
 
-// ----------------------------------------------------
-// 3. Bucle de Renderizado y Detección Facial
-// ----------------------------------------------------
 function renderLoop() {
+  if (!isCameraActive) return;
+
   if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
     lastVideoTime = video.currentTime;
 
     const result = faceLandmarker.detectForVideo(video, performance.now());
 
-    // Limpiar canvas en cada fotograma
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
     if (result.faceLandmarks && result.faceLandmarks.length > 0) {
       const landmarks = result.faceLandmarks[0];
 
-      // Dibujar la malla facial dorada
+      // Malla facial dorada
       const drawingUtils = new DrawingUtils(canvasCtx);
       drawingUtils.drawConnectors(
         landmarks,
         FaceLandmarker.FACE_LANDMARKS_TESSELATION,
-        { color: "#fbbf2470", lineWidth: 1 } // Malla en oro translúcido
+        { color: "#fbbf2470", lineWidth: 1 }
       );
 
-      // Evaluar las expresiones faciales mediante faceBlendshapes
+      // Evaluación de gestos faciales
       if (result.faceBlendshapes && result.faceBlendshapes.length > 0) {
         const shapes = result.faceBlendshapes[0].categories;
 
@@ -365,7 +593,6 @@ function renderLoop() {
         const blinkRight = shapes.find(s => s.categoryName === "eyeBlinkRight")?.score || 0;
         const isWinking = (blinkLeft > 0.55 && blinkRight < 0.25) || (blinkRight > 0.55 && blinkLeft < 0.25);
 
-        // Clasificar emoción dominante
         let detectedEmotion = "serio";
         let intensity = 20;
 
@@ -383,11 +610,9 @@ function renderLoop() {
           intensity = 25;
         }
 
-        // Actualizar barra Meme-O-Meter
         meterFill.style.width = intensity + "%";
         meterVal.textContent = intensity + "%";
 
-        // Si la emoción cambió, activar el meme correspondiente del catálogo
         if (detectedEmotion !== currentEmotion) {
           currentEmotion = detectedEmotion;
           triggerMemeForEmotion(detectedEmotion);
@@ -396,19 +621,13 @@ function renderLoop() {
     }
   }
 
-  requestAnimationFrame(renderLoop);
+  animationFrameId = requestAnimationFrame(renderLoop);
 }
 
-// ----------------------------------------------------
-// Activar Meme Correspondiente a la Emoción
-// ----------------------------------------------------
 function triggerMemeForEmotion(emotionKey) {
-  // Buscar memes que coincidan con esta emoción en el catálogo
   const matchingMemes = memesCatalog.filter(m => m.emotion === emotionKey);
-
   if (matchingMemes.length === 0) return;
 
-  // Si hay más de uno (ej. los dos perritos sonrientes), elegir uno diferente al anterior
   let chosenMeme = matchingMemes[0];
   if (matchingMemes.length > 1) {
     const others = matchingMemes.filter(m => m.id !== lastMemeId);
@@ -421,17 +640,14 @@ function triggerMemeForEmotion(emotionKey) {
 function displayMeme(meme) {
   lastMemeId = meme.id;
 
-  // Cambiar imagen con animación de brinco cómico
   memeImg.src = meme.img;
   memeImg.classList.remove("meme-bounce");
-  void memeImg.offsetWidth; // Forzar reflow
+  void memeImg.offsetWidth;
   memeImg.classList.add("meme-bounce");
 
-  // Actualizar textos
   memeTitle.textContent = meme.title;
   memePhrase.textContent = meme.phrase;
 
-  // Resaltar la tarjeta correspondiente en la guía inferior
   document.querySelectorAll(".guide-card").forEach(c => c.classList.remove("active-card"));
   const emotionInfo = EMOTION_MAP[meme.emotion];
   if (emotionInfo) {
@@ -441,12 +657,12 @@ function displayMeme(meme) {
     }
   }
 
-  // Sonido cómico retro
   playComicTone(meme.soundFreq || 350);
 }
 
-// ----------------------------------------------------
-// Arranque de la Aplicación
-// ----------------------------------------------------
+// ====================================================
+// INICIO AUTOMÁTICO
+// ====================================================
 renderCatalog();
+setupSupabaseConnection();
 initMediaPipe();

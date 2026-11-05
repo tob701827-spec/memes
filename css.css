@@ -1,6 +1,6 @@
 /* ====================================================
    Meme-O-Matic 3000 - Estilo Blanco con Dorado y Cómico
-   Con Catálogo Dinámico y Subida de Memes
+   Con Catálogo Dinámico, Supabase y Control de Cámara
    ==================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@400;600;700;800&display=swap');
@@ -15,6 +15,7 @@
     --white: #ffffff;
     --text-dark: #1e1b4b;
     --text-muted: #64748b;
+    --danger-red: #ef4444;
     --shadow-gold: 0 10px 30px rgba(245, 158, 11, 0.22), 0 4px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -26,7 +27,6 @@
 
 body {
     background-color: var(--white);
-    /* Fondo blanco puro con iluminación ambiental dorada lujosa y brillante */
     background-image: 
         radial-gradient(circle at 10% 10%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
         radial-gradient(circle at 90% 90%, rgba(217, 119, 6, 0.07) 0%, transparent 45%),
@@ -41,10 +41,12 @@ body {
     align-items: center;
 }
 
-/* Encabezado Cómico en Oro Brillante */
+/* Encabezado Cómico en Oro */
 .header-box {
     text-align: center;
     margin-bottom: 25px;
+    max-width: 1000px;
+    width: 100%;
 }
 
 h1 {
@@ -52,6 +54,7 @@ h1 {
     font-size: 1.5rem;
     line-height: 1.5;
     background: linear-gradient(180deg, #fef08a 0%, #fbbf24 35%, #f59e0b 60%, #b45309 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(2px 2px 0px #ffffff) drop-shadow(0 4px 12px rgba(245, 158, 11, 0.45));
@@ -69,12 +72,13 @@ h1 {
     gap: 8px;
 }
 
-/* Barra de Botones de Acción */
+/* Barra de Botones de Acción Superior */
 .header-actions {
     display: flex;
     justify-content: center;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     margin-top: 14px;
 }
 
@@ -124,6 +128,71 @@ h1 {
     background: var(--gold-bg-light);
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(245, 158, 11, 0.3);
+}
+
+/* Botón de Cámara: Apagar (Rojo/Dorado) vs Encender (Verde/Dorado) */
+.btn-camera-on {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-camera-off {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-camera-on:hover, .btn-camera-off:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+}
+
+/* Badge de Conexión Supabase */
+.supabase-pill {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1.5px solid #10b981;
+    font-size: 0.78rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.supabase-pill:hover {
+    transform: scale(1.03);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+}
+
+.supabase-pill.offline {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #f59e0b;
 }
 
 /* Layout Principal de 2 Columnas */
@@ -185,6 +254,46 @@ video, canvas {
     object-fit: cover;
 }
 
+/* Overlay cuando la cámara está apagada */
+.camera-off-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    z-index: 20;
+    text-align: center;
+    padding: 20px;
+}
+
+.camera-off-icon {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    animation: pulseIcon 2s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.camera-off-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.95rem;
+    color: #fef08a;
+    margin-bottom: 8px;
+}
+
+.camera-off-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    max-width: 320px;
+    margin-bottom: 14px;
+}
+
 /* Columna del Meme Activo */
 .meme-card {
     background: var(--white);
@@ -200,7 +309,6 @@ video, canvas {
     text-align: center;
 }
 
-/* Marco de la Imagen del Meme con Borde Dorado */
 .meme-img-container {
     position: relative;
     width: 260px;
@@ -226,7 +334,6 @@ video, canvas {
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Animación cómica al cambiar de meme */
 .meme-bounce {
     animation: memePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -237,7 +344,6 @@ video, canvas {
     100% { transform: scale(1) rotate(0deg); }
 }
 
-/* Título del Meme */
 #meme-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 0.85rem;
@@ -278,7 +384,7 @@ video, canvas {
     border-color: transparent transparent var(--gold-primary) transparent;
 }
 
-/* Medidor Cómico: Meme-O-Meter */
+/* Medidor Meme-O-Meter */
 .meter-container {
     width: 100%;
     margin-top: 5px;
@@ -378,7 +484,7 @@ video, canvas {
 }
 
 /* ====================================================
-   CATÁLOGO DINÁMICO DE MEMES (CON TUS FOTOS)
+   CATÁLOGO DINÁMICO DE MEMES
    ==================================================== */
 .catalog-section {
     margin-top: 40px;
@@ -462,6 +568,7 @@ video, canvas {
     font-style: italic;
     line-height: 1.3;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -493,13 +600,13 @@ video, canvas {
 }
 
 /* ====================================================
-   MODAL DE SUBIDA DE MEMES
+   MODALES (SUBIDA DE MEMES Y CONFIGURACIÓN SUPABASE)
    ==================================================== */
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -583,7 +690,6 @@ video, canvas {
     box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
-/* Área de Subida de Archivo con Previsualización */
 .file-dropzone {
     border: 2px dashed var(--gold-primary);
     background: #fffdf5;
@@ -618,6 +724,18 @@ video, canvas {
 .modal-actions button {
     flex: 1;
     padding: 10px;
+}
+
+/* Estilos de Ayuda en Modal Supabase */
+.supabase-help-box {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 14px;
 }
 
 /* Responsividad */
