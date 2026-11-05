@@ -57,7 +57,7 @@ const DEFAULT_MEMES = [
   {
     id: "def_1",
     title: "¡¡¡SHOCK TOTAL!!!",
-    phrase: '"¡¡¡¿¿¿CÓMO QUE EL EXAMEN ERA PARA HOY???!!!"',
+    phrase: '"¡¡¡¿¿¿CÓMO QUE EL EXAMEN ERA PARA HOY???!!!',
     emotion: "boca",
     img: "img/grito_shock.jpg",
     isCustom: false,
@@ -65,9 +65,9 @@ const DEFAULT_MEMES = [
   },
   {
     id: "def_2",
-    title: "Felicidad Pura",
-    phrase: '"¡Soy el ser más dulce y feliz del planeta con mi chupetín!"',
-    emotion: "sonrisa",
+    title: "Perrito con Paleta",
+    phrase: '"¡¡¡LENGUA AFUERA Y PALETA EN MANO, SOY FELIZ!!!',
+    emotion: "lengua",
     img: "img/perrito_paleta_blanco.jpg",
     isCustom: false,
     soundFreq: 520
@@ -120,15 +120,16 @@ const EMOTION_MAP = {
   boca: { label: "Boca Abierta", emoji: "😮", guideId: "guide-boca" },
   sonrisa: { label: "Sonrisa", emoji: "😄", guideId: "guide-sonrisa" },
   serio: { label: "Cara Seria", emoji: "😐", guideId: "guide-serio" },
-  guino: { label: "Guiño", emoji: "😉", guideId: "guide-guino" }
+  guino: { label: "Guiño", emoji: "😉", guideId: "guide-guino" },
+  lengua: { label: "Sacar Lengua", emoji: "😛", guideId: "guide-lengua" }
 };
 
 // ====================================================
 // CONEXIÓN A SUPABASE (POSTGRESQL & REALTIME)
 // ====================================================
 async function setupSupabaseConnection() {
-  const savedUrl = localStorage.getItem("supabase_url") || "";
-  const savedKey = localStorage.getItem("supabase_key") || "";
+  const savedUrl = localStorage.getItem("https://ykgbowimuljvnakvwwga.supabase.co") || "";
+  const savedKey = localStorage.getItem("sb_publishable_VXQHbKZQ1853CTCaQpBjdw_wDa4Lae7") || "";
 
   inputSupabaseUrl.value = savedUrl;
   inputSupabaseKey.value = savedKey;
@@ -592,11 +593,17 @@ function renderLoop() {
         const blinkLeft = shapes.find(s => s.categoryName === "eyeBlinkLeft")?.score || 0;
         const blinkRight = shapes.find(s => s.categoryName === "eyeBlinkRight")?.score || 0;
         const isWinking = (blinkLeft > 0.55 && blinkRight < 0.25) || (blinkRight > 0.55 && blinkLeft < 0.25);
+        
+        // Detección aproximada de sacar la lengua (mediante estiramiento labial vertical o blendshape si está disponible)
+        const tongueOut = shapes.find(s => s.categoryName === "tongueOut")?.score || 0;
 
         let detectedEmotion = "serio";
         let intensity = 20;
 
-        if (jawOpen > 0.35) {
+        if (tongueOut > 0.3 || (jawOpen > 0.25 && smileScore < 0.2 && shapes.find(s => s.categoryName === "mouthPucker")?.score > 0.3)) {
+          detectedEmotion = "lengua";
+          intensity = Math.min(100, Math.round(((tongueOut > 0 ? tongueOut : jawOpen) / 0.6) * 100));
+        } else if (jawOpen > 0.38) {
           detectedEmotion = "boca";
           intensity = Math.min(100, Math.round((jawOpen / 0.75) * 100));
         } else if (smileScore > 0.42) {
