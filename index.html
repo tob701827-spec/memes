@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme-O-Matic 3000 | Expresiones Faciales con IA</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+
+    <header class="header-box">
+        <h1>👑 MEME-O-MATIC 3000 👑</h1>
+        <p class="subtitle">¡Controla memes legendarios en vivo con tu rostro!</p>
+        <button id="btn-sound" class="sound-toggle-btn">
+            🔊 Efectos de Sonido: <span id="sound-status">ON</span>
+        </button>
+    </header>
+
+    <main class="stage-container">
+        <!-- Columna de la Cámara Web con Detección IA -->
+        <section class="camera-card">
+            <div class="card-badge">
+                <span>🟢</span> <span id="status-label">CONECTANDO IA...</span>
+            </div>
+            <div class="video-wrapper">
+                <video id="webcam" autoplay playsinline width="640" height="480"></video>
+                <canvas id="output_canvas" width="640" height="480"></canvas>
+            </div>
+        </section>
+
+        <!-- Columna del Meme Dinámico -->
+        <section class="meme-card">
+            <div class="card-badge">
+                <span>⭐</span> MEME DETECTADO
+            </div>
+
+            <div class="meme-img-container">
+                <img id="meme" src="https://i.imgflip.com/gk5el.jpg" alt="Meme Dinámico">
+            </div>
+
+            <h2 id="meme-title">Harold Hide The Pain</h2>
+
+            <div class="speech-bubble">
+                <p id="meme-phrase">"Sonriendo por fuera... pero qué calor hace acá."</p>
+            </div>
+
+            <div class="meter-container">
+                <div class="meter-label">
+                    <span>Intensidad de Gesto</span>
+                    <span id="meter-val">0%</span>
+                </div>
+                <div class="meter-track">
+                    <div id="meter-fill" class="meter-fill"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Guía Interactiva de Gestos -->
+    <footer class="guide-section">
+        <h3 class="guide-title">🎯 Guía de Gestos para Desbloquear Memes</h3>
+        <div class="guide-grid">
+            <div id="guide-neutral" class="guide-card active-card">
+                <div class="guide-emoji">😐</div>
+                <div class="guide-info">
+                    <h4>Cara Seria / Neutra</h4>
+                    <p>Harold Ocultando el Dolor</p>
+                </div>
+            </div>
+
+            <div id="guide-mouth" class="guide-card">
+                <div class="guide-emoji">😮</div>
+                <div class="guide-info">
+                    <h4>Abre la Boca Grande</h4>
+                    <p>Pikachu en Shock Total</p>
+                </div>
+            </div>
+
+            <div id="guide-smile" class="guide-card">
+                <div class="guide-emoji">😄</div>
+                <div class="guide-info">
+                    <h4>Muestra una Gran Sonrisa</h4>
+                    <p>Leonardo DiCaprio Brindando</p>
+                </div>
+            </div>
+
+            <div id="guide-wink" class="guide-card">
+                <div class="guide-emoji">🤨</div>
+                <div class="guide-info">
+                    <h4>Guiña un Ojo</h4>
+                    <p>The Rock Sospechoso</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lógica JavaScript Principal -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
